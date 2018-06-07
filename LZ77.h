@@ -1,12 +1,12 @@
-#ifndef _WIX_LZ77_COMPRESS_HEADER_001_ 
-#define _WIX_LZ77_COMPRESS_HEADER_001_ 
- 
+#ifndef _WIX_LZ77_COMPRESS_HEADER_001_
+#define _WIX_LZ77_COMPRESS_HEADER_001_
+
 //#include <iostream>
 class LZ77
 {
 	/*    说明
 	*   窗口大小为32k = 32768 Byte;匹配串的最小长度为3Byte,最大长度为256Byte;
-	*   这样结构体的结构 = 1bit标志位 + 15bit地址偏移 + 8bit匹配长度 
+	*   这样结构体的结构 = 1bit标志位 + 15bit地址偏移 + 8bit匹配长度
 	*/
 
 	/*						调试记录
@@ -26,6 +26,9 @@ private:
 	void addStrToWindow( unsigned char * const window,int wNumber, unsigned char * const str,int stNumber);
 
 
+	bool kmpFindStr(unsigned char * const window, int wNumber, const unsigned char * str, int stNumber);
+
+	static void getNext(const unsigned char * str, int *next, int len);
 
 	bool findStr( unsigned char * const window,int wNumber,const unsigned char * str,int stNumber);
 
@@ -34,19 +37,19 @@ private:
 
 
 	void writeOffAndLen(unsigned char *  sign,int siNumber,int off,int length);
-	
+
 
 	void writecharToBuf(unsigned char * sign,int siNumber,unsigned char * str,int stNumber);
 
 
 	void writeStruct(FILE * szFile,unsigned char sign[],int siNumber);
-	
+
 
 	void writeSign(unsigned char * sign,bool flag);
 
 
-public: 
-	
+public:
+
 	LZ77(char * ch1,char * ch2);
 
 	int yasuo();

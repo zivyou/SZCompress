@@ -3,7 +3,7 @@
 #include <math.h>
 
 
-void LZ77 :: addStrToWindow( unsigned char * const window,int wNumber, unsigned char * const str,int stNumber)       
+void LZ77 :: addStrToWindow( unsigned char * const window,int wNumber, unsigned char * const str,int stNumber)
 	{
 		int i = wNumber;
 		int j = 0;
@@ -21,7 +21,40 @@ void LZ77 :: addStrToWindow( unsigned char * const window,int wNumber, unsigned 
 		}
 	}
 
+bool LZ77::kmpFindStr(unsigned char * const window, int wNumber, const unsigned char * str, int stNumber){
+	int *next = new int[stNumber];
+	getNext(str, next, stNumber);
+	int i, j;
+	i = j = 0;
+	while (i < wNumber && j < stNumber){
+		if (j == -1 || window[i] == str[j]){
+			i++;
+			j++;
+		}
+		else
+			j = next[j];
+	}
+	delete[] next;
 
+	if (j == stNumber)
+		return true;
+	else
+		return false;
+}
+
+void LZ77::getNext(const unsigned char *str, int *next, int len){
+	int i, j = -1;
+	next[0] = -1;
+	while (i < len-1){
+		if (j == -1 || str[i] == str[j]){
+			j++;
+			i++;
+			next[i] = j;
+		}
+		else
+			j = next[j];
+	}
+}
 
 bool LZ77::findStr( unsigned char * const window,int wNumber,const unsigned char * str,int stNumber)
 	{
@@ -39,7 +72,7 @@ bool LZ77::findStr( unsigned char * const window,int wNumber,const unsigned char
 					off = wNumber - i;
 					length = stNumber;
 					return true;
-				}                      
+				}
 			}
 		}
 			return false;
@@ -50,39 +83,39 @@ int LZ77::findLongestStr( unsigned char * const window,int wNumber,FILE * file,u
 		int stNumber = 0;
 		int i = 0;
 		unsigned char c;
-		
-		if(ftell(file) >= lenOfFile) 
-			return -1; 
+
+		if(ftell(file) >= lenOfFile)
+			return -1;
 		c = fgetc(file);
 		str[i] = c;
 		stNumber++;
-		if(!findStr(window,wNumber,str,stNumber)) return i;
+		if(!kmpFindStr(window,wNumber,str,stNumber)) return i;
 
-		if(ftell(file) >= lenOfFile) 
-			return i+1; 
+		if(ftell(file) >= lenOfFile)
+			return i+1;
 
 		for(i = 1; i < 256; i++)
 		{
 			str[i] = fgetc(file);
-			stNumber++;	
-			if(!findStr(window,wNumber,str,stNumber)) 
-			{  
-				fseek(file,-1,1);		
+			stNumber++;
+			if (!kmpFindStr(window, wNumber, str, stNumber))
+			{
+				fseek(file,-1,1);
 				return i;
 			}
 			if(ftell(file) >= lenOfFile)
 			{
 				return i+1;
 			}
-		
+
 		}
-		
+
 		return i;
 
 	}
 
-void LZ77::writeOffAndLen(unsigned char *  sign,int siNumber,int off,int length)
-	{	
+	void LZ77::writeOffAndLen(unsigned char *  sign,int siNumber,int off,int length)
+	{
 		unsigned unsigned char t[3];
 		memset(t,0,3);
 		int i,temp=0 ,k;
@@ -113,7 +146,7 @@ void LZ77::writeOffAndLen(unsigned char *  sign,int siNumber,int off,int length)
 		sign[siNumber++] = t[0];
 		sign[siNumber++] = t[1];
 		sign[siNumber++] = t[2];
-	} 
+	}
 
 	void LZ77::writecharToBuf(unsigned char * sign,int siNumber,unsigned char * str,int stNumber)
 	{
@@ -137,7 +170,7 @@ void LZ77::writeOffAndLen(unsigned char *  sign,int siNumber,int off,int length)
 		}
 		else sign[0] <<= 1;
 	}
-	
+
 	LZ77::LZ77(char * ch1,char * ch2)
 	{
 		fileName = ch1;
@@ -153,7 +186,7 @@ void LZ77::writeOffAndLen(unsigned char *  sign,int siNumber,int off,int length)
 		fseek(file,0,SEEK_END);
 		int lenOfFile = ftell(file);
 		fseek(file,0,SEEK_SET);
-		
+
 
 		szFile = fopen(szFileName,"ab+");
 
@@ -167,8 +200,9 @@ void LZ77::writeOffAndLen(unsigned char *  sign,int siNumber,int off,int length)
 		{
 			siNumber = 1;
 			memset(sign,0,27);
-			for(int i = 0;i < 8;i++)
-			{	stNumber = 0;	
+			int i;
+			for(i = 0;i < 8;i++)
+			{	stNumber = 0;
 				memset(str,0,256);
 				t = findLongestStr(window,wNumber,file,str,lenOfFile);
 				if(t == 0 || t == 1)
@@ -188,7 +222,7 @@ void LZ77::writeOffAndLen(unsigned char *  sign,int siNumber,int off,int length)
 						stNumber = 2;
 						int count = t;
 						while(count--)
-							writeSign(sign,0);		
+							writeSign(sign,0);
 						writecharToBuf(sign,siNumber,str,stNumber);
 						addStrToWindow(window,wNumber,str,stNumber);
 						i++;                           //依然是这个i的问题，假设此时i=7,而又找到了两个，这个时候怎么处理？
@@ -218,7 +252,7 @@ void LZ77::writeOffAndLen(unsigned char *  sign,int siNumber,int off,int length)
 					wNumber+=length;
 					wNumber = wNumber > 32768 ? 32768 : wNumber;
 				}
-						
+
 				if(t < 0)                 //读到文件尾；
 					break;
 			}
@@ -229,7 +263,7 @@ void LZ77::writeOffAndLen(unsigned char *  sign,int siNumber,int off,int length)
 				while(k++ < 8 - i)
 				{
 					writeSign(sign,0);
-				}	
+				}
 			}
 			writeStruct(szFile,sign,siNumber);
 			if(t < 0)                 //读到文件尾；
